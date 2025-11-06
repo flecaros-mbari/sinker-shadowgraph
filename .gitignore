@@ -1,0 +1,16 @@
+*.png
+*.tif
+*.tiff
+*.jpg
+*.jpeg
+*.csv
+*.mp4
+
+
+testing_output/
+contours/
+images/
+output_frames_v2/
+ROIs/
+
+
