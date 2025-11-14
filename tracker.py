@@ -80,7 +80,7 @@ def track_particles_from_dataframe(df, max_distance=400, max_missing=3):
     tracks = []
     next_id = 0
 
-    df = df[df['area'] > 40].copy()
+    df = df[df['area'] > 500].copy()
 
     # Creamos columna 'particle' vacía
     df['particle'] = -1
@@ -148,8 +148,8 @@ def track_particles_from_dataframe(df, max_distance=400, max_missing=3):
 if __name__ == "__main__":
     
     # Simulating the csv
-    df = pd.read_csv('/Users/fernandalecaros/Downloads/sinker/results/frames.csv')
+    df = pd.read_csv('/opt/cfe-lab/test/results/frames.csv')
     df_tracked = track_particles_from_dataframe(df)
-    df_tracked.to_csv("/Users/fernandalecaros/Downloads/sinker/results/sinker_tracked.csv", index=False)
+    df_tracked.to_csv("/opt/cfe-lab/test/results/sinker_tracked.csv", index=False)
     print("\nTracked DataFrame:")
     print(df_tracked)
