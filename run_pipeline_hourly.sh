@@ -6,7 +6,7 @@
 # Invoked hourly by the sinker-pipeline systemd timer.
 set -euo pipefail
 
-REPO_ROOT="/opt/cfe-lab/sinker-shadowgraph-backup"
+REPO_ROOT="/opt/cfe-lab/sinker-shadowgraph"
 PYTHON="/opt/cfe-lab/miniconda3/envs/sinker/bin/python"
 INSTRUMENT_DIR="/mnt/SINKER/MARS/Shadowgraph_40297765"
 STATE_FILE="${HOME}/.local/state/sinker-pipeline/last_processed_folder"
