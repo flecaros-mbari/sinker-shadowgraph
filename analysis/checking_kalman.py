@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from tracking_imporoved import SimpleKalman, ParticleTrack, compute_cost, _is_edge_clipped
+from tracking_improved import SimpleKalman, ParticleTrack, compute_cost, _is_edge_clipped
 from scipy.optimize import linear_sum_assignment
 
 
@@ -72,7 +72,7 @@ def run_tracker(csv_path, alpha=1.0, beta=400.0, gamma=200.0,
         cost = compute_cost(tracks, detections,
                             alpha=alpha, beta=beta, gamma=gamma,
                             img_w=img_w, img_h=img_h)
-        # Gate infeasible pairs before optimizing — see tracking_imporoved.py
+        # Gate infeasible pairs before optimizing — see tracking_improved.py
         # for why post-hoc thresholding lets Hungarian steal good matches.
         row_idx, col_idx = linear_sum_assignment(
             np.where((cost >= max_distance) | np.isinf(cost), 1e18, cost)
