@@ -13,4 +13,7 @@ images/
 output_frames_v2/
 ROIs/
 
+__pycache__/
+*.pyc
+
 

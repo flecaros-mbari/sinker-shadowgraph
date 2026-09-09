@@ -34,21 +34,21 @@ if __name__ == "__main__":
             t = pd.read_csv(filtered_tracks_path)
         elif os.path.exists(tracks_path):
             t = pd.read_csv(tracks_path)
-            t = tp.filter_stubs(t, 2)
+            # t = tp.filter_stubs(t, 2)
+            
+            # for item in set(t.particle):
+            #     logger.info(f"Filtering particle: {item}")
+            #     sub = t[t.particle == item]
 
-            for item in set(t.particle):
-                logger.info(f"Filtering particle: {item}")
-                sub = t[t.particle == item]
+            #     # calcular ventana mínima
+            #     win = min(5, len(sub))
+            #     if win % 2 == 0:  # asegurar impar
+            #         win -= 1
+            #     if win > 3:  # aplicar filtro solo si mayor que polyorder
+            #         t.loc[t.particle == item, 'x'] = savgol_filter(sub.x, window_length=win, polyorder=3)
+            #         t.loc[t.particle == item, 'y'] = savgol_filter(sub.y, window_length=win, polyorder=3)
 
-                # calcular ventana mínima
-                win = min(5, len(sub))
-                if win % 2 == 0:  # asegurar impar
-                    win -= 1
-                if win > 3:  # aplicar filtro solo si mayor que polyorder
-                    t.loc[t.particle == item, 'x'] = savgol_filter(sub.x, window_length=win, polyorder=3)
-                    t.loc[t.particle == item, 'y'] = savgol_filter(sub.y, window_length=win, polyorder=3)
-
-            t.to_csv(filtered_tracks_path, index=False)
+            # t.to_csv(filtered_tracks_path, index=False)
 
         else:  # este else pertenece al `elif os.path.exists(tracks_path):`
             logger.error("No tracks file found in results folder.")
@@ -56,16 +56,17 @@ if __name__ == "__main__":
 
 
         data = pd.DataFrame()
-        for item in set(t.particle):
-            sub = t[t.particle == item]
-            dvx = np.diff(sub.x)
-            dvy = np.diff(sub.y)
-            area = sub.area
-            for x, y, dx, dy, frame, area in zip(sub.x[:-1], sub.y[:-1], dvx, dvy, sub.frame[:-1], area):
-                logger.info(f"frame: {frame}, particle: {item}")
-                data = pd.concat([data, pd.DataFrame([{
-                    'dx': dx, 'dy': dy, 'x': x, 'y': y, 'frame': frame, 'particle': item, 'area': area
-                }])], axis=0)
+        rows = []
+        for particle in t.particle_id.unique():
+            sub = t[t.particle_id == particle].sort_values('frame')
+            dvx = np.diff(sub.x.values)
+            dvy = np.diff(sub.y.values)
+            areas = sub.area.values
+            for x, y, dx, dy, frame, a in zip(sub.x.values[:-1], sub.y.values[:-1], dvx, dvy, sub.frame.values[:-1], areas[:-1]):
+                rows.append({'dx': dx, 'dy': dy, 'x': x, 'y': y, 'frame': frame, 'particle_id': particle, 'area': a})
+                logger.info('dx ', dx, ' dy ', dy, ' x ', x, ' y ', y, ' frame ', frame, ' particle_id', particle, ' area ', a)
+        data = pd.DataFrame(rows)
+
 
         data.to_csv(velocities_path, index=False)
     else:
@@ -76,17 +77,22 @@ if __name__ == "__main__":
         exit()
 
     rawframes = pims.ImageSequence(os.path.join(image_path, "*.jpeg"))
-    output_dir = os.path.join(base_path, 'output_frames_v2')
+    output_dir = os.path.join(base_path, 'tracks')
     os.makedirs(output_dir, exist_ok=True)
 
     for i in range(len(rawframes)):
-        logger.info(f"Visualizing frame: {i}")
-        d = data[(data.frame == i) & (data.area > 100)]
+        logger.info(f"\n--- Frame {i} ---")
+        d = data[(data.frame == i) & (data.area > 300)]
+        logger.info(f"rawframe shape: {rawframes[i].shape}")
+        logger.info(f"Particles in this frame: {len(d)}")
+        logger.info(f"dx stats: min={d.dx.min() if len(d)>0 else None}, max={d.dx.max() if len(d)>0 else None}")
+
+        
         fig, ax = plt.subplots()
         plt.imshow(rawframes[i], cmap='gray', vmin=0, vmax=255)
         colormap = cm.viridis
         colors = 24.0 * 3600 * 10 * np.sqrt(d.dx**2 + d.dy**2) / 1_000_000  # m/day
-        norm = Normalize(vmin=0, vmax=25)
+        norm = Normalize(vmin=0, vmax=255)
         plt.quiver(d.x, d.y, d.dx, -d.dy, color=colormap(norm(colors)), scale_units='xy', scale=0.1, pivot='tail', width=0.0008, headwidth=5, headlength=5)
         cbar = fig.colorbar(cm.ScalarMappable(norm=norm, cmap=colormap), ax=ax)
         cbar.set_label('Estimated speed (m/d)')
